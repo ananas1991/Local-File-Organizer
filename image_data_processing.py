@@ -7,21 +7,6 @@ from nltk.stem import WordNetLemmatizer
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
 from data_processing_common import sanitize_filename  # Import sanitize_filename
 
-def get_text_from_generator(generator):
-    """Extract text from the generator response."""
-    response_text = ""
-    try:
-        while True:
-            response = next(generator)
-            choices = response.get('choices', [])
-            for choice in choices:
-                delta = choice.get('delta', {})
-                if 'content' in delta:
-                    response_text += delta['content']
-    except StopIteration:
-        pass
-    return response_text
-
 def process_single_image(image_path, image_inference, text_inference, silent=False, log_file=None):
     """Process a single image file to generate metadata."""
     start_time = time.time()
@@ -68,8 +53,7 @@ def generate_image_metadata(image_path, progress, task_id, image_inference, text
 
     # Step 1: Generate description using image_inference
     description_prompt = "Please provide a detailed description of this image, focusing on the main subject and any important details."
-    description_generator = image_inference._chat(description_prompt, image_path)
-    description = get_text_from_generator(description_generator).strip()
+    description = image_inference.chat(description_prompt, image_path).strip()
     progress.update(task_id, advance=1 / total_steps)
 
     # Step 2: Generate filename using text_inference
